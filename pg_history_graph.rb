@@ -26,7 +26,7 @@ version_from = 8
 opt = OptionParser.new
 opt.on('-r', '--reload', 'reload all release note data') { reload = true }
 opt.on('-i NUM', '--interval=NUM', 'header line interval') { |v| header_line_interval = v.to_i}
-opt.on('-v NUM', '--versin=NUM', 'Output releases from NUM version') { |v| version_from = v.to_i }
+opt.on('-v NUM', '--version=NUM', 'Output releases from NUM version') { |v| version_from = v.to_i }
 opt.parse(ARGV)
 
 def reload_pgversions()
@@ -38,10 +38,15 @@ def reload_pgversions()
   majors_file = File.open(MajorsFilepath, "w")
   
   release_doc.xpath("//span[@class='sect1' and contains (*, 'Release')]").each do |t|
-
     ver_match = t.inner_text.match(/[0-9]+\.[0-9]+\.*[0-9]*/)
 
-    # Ignore empty line
+    # Retry for version 10 or later
+    # XXX: need to fix it after version 11 released
+    if ver_match.nil? then
+      ver_match = t.inner_text.match(/10\.*[0-9]*/)
+    end
+
+    # This line is not any version, skip it
     if ver_match.nil? then next end
   
     version = ver_match[0]
@@ -126,8 +131,12 @@ File.open(ReleasesFilepath, "r") do |f|
     # Skip release older than the threshold(version_from).
     if pv.version_1.to_i < version_from then next end
 
-    # Make major version. XXX : need to be improved after PG10 released.
-    major_version = pv.version_1 + "." + pv.version_2
+    # Make major version.
+    if pv.version_1.to_i >= 10 then
+      major_version = pv.version_1
+    else
+      major_version = pv.version_1 + "." + pv.version_2
+    end
 
     major_pv = major_versions[major_version]
     if major_pv.nil? then
@@ -185,7 +194,7 @@ pgversions.each do |pv|
       if released_pv.nil? then
         # this major version is not released at current_date
         if major_pv.started then
-          char = "|"
+          char = ":"
         else
           char = " "
         end

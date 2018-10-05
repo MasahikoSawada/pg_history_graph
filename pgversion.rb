@@ -2,8 +2,12 @@ require 'nokogiri'
 require 'open-uri'
 
 $ReleaseNoteDir = './release_notes'
-PgReleaseURLBase = "https://www.postgresql.org/docs/devel/static/release-XX-YY-ZZ.html"
-PgReleaseURLBase_Fist = "https://www.postgresql.org/docs/devel/static/release-XX-YY.html"
+# for version 9.6 or before
+PgReleaseURLBase_ThreeNum = "https://www.postgresql.org/docs/devel/static/release-XX-YY-ZZ.html"
+PgReleaseURLBase_Fist_ThreeNum = "https://www.postgresql.org/docs/devel/static/release-XX-YY.html"
+# for version 10 or later
+PgReleaseURLBase_TwoNum = "https://www.postgresql.org/docs/devel/static/release-XX-YY.html"
+PgReleaseURLBase_Fist_TwoNum = "https://www.postgresql.org/docs/devel/static/release-XX.html"
 
 class PgMajorVersion
   attr_accessor :major_version, :minor_versions, :started, :max_minor_ver
@@ -44,18 +48,38 @@ class PgVersion
     @version_2 = version.split('.')[1]
     @version_3 = version.split('.')[2]
 
-    if @version_3.nil? then
-      @first_version = true
-      @version_num = sprintf("%02d%02d00", @version_1, @version_2)
+    if @version_1.to_i >= 10 then
+      # version 10 or later
+      if @version_2.nil? then
+        @first_version = true
+        @version_num = sprintf("%02d0000", @version_1)
+      else
+        @first_version = false
+        @version_num = sprintf("%02d00%02d", @version_1, @version_2)
+      end
     else
-      @first_version = false
-      @version_num = sprintf("%02d%02d%02d", @version_1, @version_2, @version_3)
+      # version 9.6 or before
+      if @version_3.nil? then
+        @first_version = true
+        @version_num = sprintf("%02d%02d00", @version_1, @version_2)
+      else
+        @first_version = false
+        @version_num = sprintf("%02d%02d%02d", @version_1, @version_2, @version_3)
+      end
     end
-    
-    if @first_version then
-      @release_note_url = PgReleaseURLBase_Fist.sub(/XX/, @version_1).sub(/YY/, @version_2)
+
+    if @version_1.to_i >= 10 then
+      if @first_version then
+        @release_note_url = PgReleaseURLBase_Fist_TwoNum.sub(/XX/, @version_1)
+      else
+        @release_note_url = PgReleaseURLBase_TwoNum.sub(/XX/, @version_1).sub(/YY/, @version_2)
+      end
     else
-      @release_note_url = PgReleaseURLBase.sub(/XX/, @version_1).sub(/YY/, @version_2).sub(/ZZ/, @version_3)
+      if @first_version then
+        @release_note_url = PgReleaseURLBase_Fist_ThreeNum.sub(/XX/, @version_1).sub(/YY/, @version_2)
+      else
+        @release_note_url = PgReleaseURLBase_ThreeNum.sub(/XX/, @version_1).sub(/YY/, @version_2).sub(/ZZ/, @version_3)
+      end
     end
 
     @r_note_filename = @version + ".html"
@@ -96,7 +120,11 @@ class PgVersion
     if @first_version then
       return "0"
     else
-      return @version_3
+      if @version_1.to_i >= 10 then
+        return @version_2
+      else
+        return @version_3
+      end
     end
   end
 end
