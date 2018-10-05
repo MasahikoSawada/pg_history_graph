@@ -25,8 +25,8 @@ version_from = 8
 
 opt = OptionParser.new
 opt.on('-r', '--reload', 'reload all release note data') { reload = true }
-opt.on('-i NUM', '--interval=NUM', 'header line interval') { |v| header_line_interval = v.to_i}
-opt.on('-v NUM', '--version=NUM', 'Output releases from NUM version') { |v| version_from = v.to_i }
+opt.on('-i NUM', '--interval=NUM', 'header line interval (default: 20)') { |v| header_line_interval = v.to_i}
+opt.on('-v NUM', '--version=NUM', 'Output releases from NUM version (default: 8)') { |v| version_from = v.to_i }
 opt.parse(ARGV)
 
 def reload_pgversions()

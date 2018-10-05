@@ -109,7 +109,7 @@ class PgVersion
 
   # Save release note html file into ReleaseNoteDir
   def save_release_note()
-    puts "release note for " + @version + " saving..."
+    puts "Saving the release note of " + @version + " ..."
     r_note = Nokogiri::HTML(open(@release_note_url))
     File.open(@r_note_filepath, "w") do |f|
       f.puts(r_note)
