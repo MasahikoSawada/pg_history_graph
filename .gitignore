@@ -1,1 +1,4 @@
-release_notes/*
+release_notes/*.html
+release_notes/releases
+release_notes/majors
+
